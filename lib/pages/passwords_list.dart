@@ -1,0 +1,314 @@
+import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:compsec/pages/password_details.dart';
+import 'package:compsec/model/account.dart';
+import 'package:compsec/dbhelper.dart';
+import 'package:hive/hive.dart';
+import 'package:compsec/dbhelperlog.dart';
+
+class CustomSearchDelegate extends SearchDelegate {
+
+  final List<Account> accountsList;
+  CustomSearchDelegate(this.accountsList);
+
+// first overwrite to
+// clear the search text
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        onPressed: () {
+          query = '';
+        },
+        icon: const Icon(Icons.clear),
+      ),
+    ];
+  }
+
+// second overwrite to pop out of search menu
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        close(context, null);
+      },
+      icon: const Icon(Icons.arrow_back),
+    );
+  }
+
+// third overwrite to show query result
+  @override
+  Widget buildResults(BuildContext context) {
+    List<Account> matchQuery = [];
+    for (var fruit in accountsList) {
+      if (fruit.domain.toLowerCase().contains(query.toLowerCase()) ||
+          fruit.username.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(fruit);
+      }
+    }
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 0),
+          child: Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(
+                  color: Color.fromRGBO(103, 80, 164, 0.05),
+                ),
+                borderRadius: BorderRadius.circular(15.0), //<-- SEE HERE
+              ),
+              child: TextButton(
+                onPressed: () {
+
+                  final now = DateTime.now();
+                  final domainEnt = result.domain;
+                  final userEnt = result.username;
+                  DBHelperLog().createLog(now.toString(), domainEnt, userEnt);
+                  close(context, null);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              AccountDetailsPage(account: result)));
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      const Color.fromRGBO(232, 222, 248, 1)),
+                ),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      ListTile(
+                          leading: Image(
+                            image: AssetImage('assets/images/${result.icon}'),
+                          ),
+                          title: Text(result.domain,
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                                color: Colors.black,
+                              )),
+                          subtitle: Text(result.username,
+                              style: const TextStyle(
+                                  fontSize: 12.0, color: Colors.black)))
+                    ]),
+              )),
+        );
+      },
+    );
+  }
+
+// last overwrite to show the
+// querying process at the runtime
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    List<Account> matchQuery = [];
+    for (var fruit in accountsList) {
+      if (fruit.domain.toLowerCase().contains(query.toLowerCase()) ||
+          fruit.username.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(fruit);
+      }
+    }
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 0),
+          child: Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(
+                  color: Color.fromRGBO(103, 80, 164, 0.05),
+                ),
+                borderRadius: BorderRadius.circular(15.0), //<-- SEE HERE
+              ),
+              child: TextButton(
+                onPressed: () {
+
+                  final now = DateTime.now();
+                  final domainEnt = result.domain;
+                  final userEnt = result.username;
+                  DBHelperLog().createLog(now.toString(), domainEnt, userEnt);
+                  close(context, null);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              AccountDetailsPage(account:result)));
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      const Color.fromRGBO(103, 80, 164, 0.05)),
+                  //   // shadowColor: MaterialStateProperty.all(
+                  //     const Color.fromRGBO(255, 255, 255, 1)),
+                ),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      ListTile(
+                          leading: Image(
+                            image: AssetImage('assets/images/${result.icon}'),
+                          ),
+                          title: Text(result.domain,
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                                color: Colors.black,
+                              )),
+                          // const SizedBox(height: 8.0),
+                          subtitle: Text(result.username,
+                              style: const TextStyle(
+                                  fontSize: 12.0, color: Colors.black)))
+                    ]),
+              )),
+        );
+      },
+    );
+  }
+}
+
+class AccountsList extends StatefulWidget {
+  const AccountsList({super.key});
+
+  @override
+  State<AccountsList> createState() => _AccountsListState();
+}
+
+class _AccountsListState extends State<AccountsList> {
+  List<Account> accounts = DBHelper().fetchAllAccounts();
+
+  void precacheImages(BuildContext context) {
+    precacheImage(const AssetImage('assets/images/amazon-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/facebook-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/twitter-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/sbi-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/instagram-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/linkedin-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/eduserver-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/hdfc-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/icici-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/aternos-listicon.png'),context);
+    precacheImage(const AssetImage('assets/images/default-listicon.png'),context);
+  }
+
+  Widget accountTemplate(account) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 0),
+      child: Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(
+              color: Color.fromRGBO(103, 80, 164, 0.05),
+            ),
+            borderRadius: BorderRadius.circular(15.0), //<-- SEE HERE
+          ),
+          // margin: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
+          child: TextButton(
+            onPressed: () {
+              final now = DateTime.now();
+              final domainEnt = account.domain;
+              final userEnt = account.username;
+              DBHelperLog().createLog(now.toString(), domainEnt, userEnt);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          AccountDetailsPage(account:account)))
+                  .then((_) => setState(() {accounts = DBHelper().fetchAllAccounts();}));
+            },
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(
+                  const Color.fromRGBO(232, 222, 248, 1)),
+              //   // shadowColor: MaterialStateProperty.all(
+              //     const Color.fromRGBO(255, 255, 255, 1)),
+            ),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  ListTile(
+                      leading: Image(
+                        image: AssetImage('assets/images/${account.icon}'),
+                      ),
+                      title: Text(account.domain,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black,
+                          )),
+                      // const SizedBox(height: 8.0),
+                      subtitle: Text(account.username,
+                          style: const TextStyle(
+                              fontSize: 12.0, color: Colors.black)))
+                ]),
+          )),
+    );
+  }
+
+  bool click = false;
+  bool ascendingSort = false;
+
+  @override
+  Widget build(BuildContext context) {
+    precacheImages(context);
+    return Scaffold(
+        backgroundColor: const Color.fromRGBO(255, 251, 250, 1),
+        appBar: AppBar(
+          title: const Text(
+            'Accounts',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(
+                Icons.search,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                showSearch(
+                    context: context,
+                    // delegate to customize the search bar
+                    delegate: CustomSearchDelegate(accounts));
+              },
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  ascendingSort = !(ascendingSort);
+                  if(ascendingSort) {
+                    accounts.sort((a, b) {
+                      if(a.domain.toLowerCase() == b.domain.toLowerCase()) {
+                        return a.username.toLowerCase().compareTo(b.username.toLowerCase());
+                      } else {
+                        return a.domain.toLowerCase().compareTo(b.domain.toLowerCase());
+                      }
+                    });
+                  } else {
+                    accounts.sort((a, b) {
+                      if(a.domain.toLowerCase() == b.domain.toLowerCase()) {
+                        return b.username.toLowerCase().compareTo(a.username.toLowerCase());
+                      } else {
+                        return b.domain.toLowerCase().compareTo(a.domain.toLowerCase());
+                      }
+                    });
+                  }
+                });
+              },
+              icon: const Icon(
+                  Icons.sort_by_alpha,
+                  color: Colors.white),
+            ),
+          ],
+          centerTitle: true,
+          backgroundColor: const Color.fromRGBO(59, 85, 171, 1.0),
+          foregroundColor: const Color.fromRGBO(0, 0, 0, 1),
+        ),
+        body: ListView.builder(
+          shrinkWrap: true,
+          itemCount: accounts.length,
+          itemBuilder: (BuildContext context, int idx) {
+            return accountTemplate(
+                accounts[idx]);
+          },
+        ));
+  }}
